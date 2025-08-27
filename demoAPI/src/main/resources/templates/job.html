@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en-vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Email Job</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #1a1a1a;
+            color: #fff;
+            margin: 0;
+            padding: 20px;
+        }
+
+        .container {
+            width: 400px;
+            border: 1px solid #ccc;
+            padding: 20px;
+            margin: 0 auto;
+            background-color: #2d2d2d;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header h2 {
+            margin: 0;
+            font-size: 24px;
+        }
+
+        .header p {
+            margin: 0;
+            font-size: 14px;
+            color: #bbb;
+        }
+
+        .job {
+            margin: 15px 0;
+        }
+
+        .job strong {
+            color: #1e90ff;
+        }
+
+        .job a {
+            display: inline-block;
+            background-color: #4a4a4a;
+            color: #fff;
+            padding: 5px 10px;
+            text-decoration: none;
+            border-radius: 5px;
+            margin: 5px 2px;
+        }
+
+        .button {
+            background-color: #ff0000;
+            color: #fff;
+            padding: 10px;
+            text-align: center;
+            display: block;
+            text-decoration: none;
+            border-radius: 5px;
+            margin: 20px 0;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="header">
+        <h2>Hỏi Dân IT</h2>
+        <p>ít nhưng mà chất</p>
+    </div>
+    <hr>
+    <p th:text="|Hi ${userName}|"></p>
+    <p>Một trong những jobs này có thể là của bạn. Tìm hiểu ngay hôm nay!</p>
+    <div class="job" th:each="job : ${jobs}">
+        <p><strong th:text="|Job name: ${job.name}|"></strong></p>
+        <p th:text="|Company: ${job.company.name}|"></p>
+        <p th:text="|Salary: ${#numbers.formatDecimal(job.salary * 25000, 0, 'COMMA', 0, 'POINT')} đ|"></p>
+        <p><a th:href="@{#}" th:each="skill : ${job.skills}" th:text="${skill.name}"></a></p>
+    </div>
+    <a th:href="@{#}" class="button">Xem thêm job tại Hỏi Dân IT</a>
+    <p>Cheers,</p>
+    <p>Eric.</p>
+</div>
+</body>
+</html>

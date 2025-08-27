@@ -1,0 +1,51 @@
+package com.jobHunter.demoAPI.domain.dto.user;
+
+import com.fasterxml.jackson.annotation.JsonFormat;
+import com.jobHunter.demoAPI.util.constant.GenderEnum;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+
+import java.time.Instant;
+
+@Getter
+@Setter
+@AllArgsConstructor
+@NoArgsConstructor
+public class RestUserViewDTO {
+
+    private Long id;
+    private String name;
+    private String email;
+    private int age;
+    private GenderEnum gender;
+    private String address;
+
+//    @JsonFormat(pattern="yyyy-MM-dd HH:mm:ss a", timezone = "GMT+7")
+    private Instant createdAt;
+
+//    @JsonFormat(pattern="yyyy-MM-dd HH:mm:ss a", timezone = "GMT+7")
+    private Instant updateAt;
+
+    private CompanyView company;
+    private RoleView role;
+
+    @Getter
+    @Setter
+    @AllArgsConstructor
+    @NoArgsConstructor
+    public static class CompanyView {
+        private Long id;
+        private String name;
+    }
+
+    @Getter
+    @Setter
+    @AllArgsConstructor
+    @NoArgsConstructor
+    public static class RoleView {
+        private Long id;
+        private String name;
+    }
+}
