@@ -1,6 +1,5 @@
 package com.jobHunter.demoAPI.service.impl;
 
-import com.jobHunter.demoAPI.domain.dto.pagination.Meta;
 import com.jobHunter.demoAPI.domain.dto.pagination.ResultPaginationDTO;
 import com.jobHunter.demoAPI.domain.dto.permission.RestPermissionCreateDTO;
 import com.jobHunter.demoAPI.domain.dto.permission.RestPermissionUpdateDTO;
@@ -8,6 +7,7 @@ import com.jobHunter.demoAPI.domain.dto.permission.RestPermissionViewDTO;
 import com.jobHunter.demoAPI.domain.entity.Permission;
 import com.jobHunter.demoAPI.repository.PermissionRepository;
 import com.jobHunter.demoAPI.service.PermissionService;
+import com.jobHunter.demoAPI.util.pagination.PageUtil;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
@@ -41,29 +41,10 @@ public class PermissionServiceImpl implements PermissionService {
 
         List<RestPermissionViewDTO> permissionViewDTOList = pageHavPermissions.getContent()
                 .stream()
-                .map(permission ->
-                        new RestPermissionViewDTO(
-                                permission.getId(),
-                                permission.getName(),
-                                permission.getApiPath(),
-                                permission.getMethod(),
-                                permission.getModule(),
-                                permission.getCreatedAt(),
-                                permission.getCreatedBy(),
-                                permission.getUpdatedAt(),
-                                permission.getUpdatedBy()
-                        )
-                )
+                .map(this::convertPermissionToRestPermissionViewDTO)
                 .toList();
 
-        Meta meta = new Meta();
-        meta.setCurrent(pageable.getPageNumber() + 1);
-        meta.setPageSize(pageable.getPageSize());
-        meta.setPages(pageHavPermissions.getTotalPages());
-        meta.setTotal(pageHavPermissions.getTotalElements());
-
-        ResultPaginationDTO resultPaginationDTO = new ResultPaginationDTO();
-        resultPaginationDTO.setMeta(meta);
+        ResultPaginationDTO resultPaginationDTO = PageUtil.handleFetchAllDataWithPagination(pageHavPermissions, pageable);
         resultPaginationDTO.setResult(permissionViewDTOList);
 
         return resultPaginationDTO;
