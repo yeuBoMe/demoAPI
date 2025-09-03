@@ -1,16 +1,16 @@
 package com.jobHunter.demoAPI.service.impl;
 
-import com.jobHunter.demoAPI.domain.dto.pagination.Meta;
 import com.jobHunter.demoAPI.domain.dto.pagination.ResultPaginationDTO;
 import com.jobHunter.demoAPI.domain.dto.role.RestRoleCreateDTO;
 import com.jobHunter.demoAPI.domain.dto.role.RestRoleUpdateDTO;
 import com.jobHunter.demoAPI.domain.dto.role.RestRoleViewDTO;
 import com.jobHunter.demoAPI.domain.entity.Permission;
 import com.jobHunter.demoAPI.domain.entity.Role;
+import com.jobHunter.demoAPI.repository.PermissionRepository;
 import com.jobHunter.demoAPI.repository.RoleRepository;
 import com.jobHunter.demoAPI.repository.UserRepository;
-import com.jobHunter.demoAPI.service.PermissionService;
 import com.jobHunter.demoAPI.service.RoleService;
+import com.jobHunter.demoAPI.util.pagination.PageUtil;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
@@ -25,18 +25,18 @@ public class RoleServiceImpl implements RoleService {
 
     private final RoleRepository roleRepository;
 
-    private final PermissionService permissionService;
+    private final PermissionRepository permissionRepository;
 
     private final UserRepository userRepository;
 
     public RoleServiceImpl(
             RoleRepository roleRepository,
-            PermissionService permissionService,
-            UserRepository userRepository
+            UserRepository userRepository,
+            PermissionRepository permissionRepository
     ) {
         this.roleRepository = roleRepository;
-        this.permissionService = permissionService;
         this.userRepository = userRepository;
+        this.permissionRepository = permissionRepository;
     }
 
     private void checkNullAndSetPermissions(Role roleRequest, Role currentRole) {
@@ -44,7 +44,7 @@ public class RoleServiceImpl implements RoleService {
                 && !roleRequest.getPermissions().isEmpty()
         ) {
             for (Permission permission : roleRequest.getPermissions()) {
-                if (!this.permissionService.checkIdExists(permission.getId())) {
+                if (!this.permissionRepository.existsById(permission.getId())) {
                     throw new NoSuchElementException("Permission with id " + permission.getId() + " not exists");
                 }
             }
@@ -52,8 +52,9 @@ public class RoleServiceImpl implements RoleService {
             List<Long> idList = roleRequest.getPermissions().stream()
                     .map(Permission::getId)
                     .toList();
-            List<Permission> permissionList = this.permissionService.getPermissionsByListId(idList);
-            role.setPermissions(permissionList);
+
+            List<Permission> permissionList = this.permissionRepository.findAllByIdIn(idList);
+            currentRole.setPermissions(permissionList);
         }
     }
 
@@ -62,7 +63,7 @@ public class RoleServiceImpl implements RoleService {
         if (this.checkNameExists(role.getName())) {
             throw new IllegalArgumentException(String.format("Role with name '%s' already exists", role.getName()));
         }
-        this.checkNullAndSetPermissions(role);
+        this.checkNullAndSetPermissions(role, role);
         return this.roleRepository.save(role);
     }
 
@@ -76,19 +77,7 @@ public class RoleServiceImpl implements RoleService {
             throw new IllegalArgumentException(String.format("Role with name '%s' already exists", roleUpdated.getName()));
         }
 
-        if (roleUpdated.getPermissions() != null && !roleUpdated.getPermissions().isEmpty()) {
-            for (Permission permission : roleUpdated.getPermissions()) {
-                if (!this.permissionService.checkIdExists(permission.getId())) {
-                    throw new NoSuchElementException("Permission with id " + permission.getId() + " not exists");
-                }
-            }
-
-            List<Long> idList = roleUpdated.getPermissions().stream()
-                    .map(Permission::getId)
-                    .toList();
-            List<Permission> permissionList = this.permissionService.getPermissionsByListId(idList);
-            roleGetById.setPermissions(permissionList);
-        }
+        this.checkNullAndSetPermissions(roleUpdated, roleGetById);
 
         roleGetById.setName(roleUpdated.getName());
         roleGetById.setDescription(roleUpdated.getDescription());
@@ -132,14 +121,7 @@ public class RoleServiceImpl implements RoleService {
                 .map(this::convertRoleToRestRoleViewDTO)
                 .toList();
 
-        Meta meta = new Meta();
-        meta.setCurrent(pageable.getPageNumber() + 1);
-        meta.setPageSize(pageable.getPageSize());
-        meta.setPages(pageHavRoles.getTotalPages());
-        meta.setTotal(pageHavRoles.getTotalElements());
-
-        ResultPaginationDTO resultPaginationDTO = new ResultPaginationDTO();
-        resultPaginationDTO.setMeta(meta);
+        ResultPaginationDTO resultPaginationDTO = PageUtil.handleFetchAllDataWithPagination(pageHavRoles, pageable);
         resultPaginationDTO.setResult(restRoleViewDTOList);
 
         return resultPaginationDTO;

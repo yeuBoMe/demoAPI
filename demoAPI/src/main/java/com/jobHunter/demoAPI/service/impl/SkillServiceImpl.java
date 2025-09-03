@@ -11,7 +11,6 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.List;
 import java.util.NoSuchElementException;
 
 @Service
@@ -92,10 +91,5 @@ public class SkillServiceImpl implements SkillService {
     @Override
     public boolean checkNameExists(String name) {
         return this.skillRepository.existsByName(name);
-    }
-
-    @Override
-    public List<Skill> getSkillsByListId(List<Long> ids) {
-        return this.skillRepository.findAllByIdIn(ids);
     }
 }
