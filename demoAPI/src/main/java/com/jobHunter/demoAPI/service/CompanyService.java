@@ -7,19 +7,16 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 
 public interface CompanyService {
+    Company createCompany(Company company);
+    Company updateCompanyById(Long id, Company company);
+    Company getCompanyById(Long id);
+
     ResultPaginationDTO fetchAllCompanies(Specification<Company> spec, Pageable pageable);
 
     RestCompanyViewDTO convertCompanyToRestCompanyViewDTO(Company company);
 
-    Company getCompanyById(Long id);
-
     boolean checkNameExists(String name);
-
     boolean checkIdExists(Long id);
-
-    Company createCompany(Company company);
-
-    Company updateCompanyById(Long id, Company company);
 
     void deleteCompanyById(Long id);
 }

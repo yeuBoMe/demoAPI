@@ -1,6 +1,5 @@
 package com.jobHunter.demoAPI.service.impl;
 
-import com.jobHunter.demoAPI.domain.dto.pagination.Meta;
 import com.jobHunter.demoAPI.domain.dto.user.RestUserCreateDTO;
 import com.jobHunter.demoAPI.domain.dto.user.RestUserViewDTO;
 import com.jobHunter.demoAPI.domain.dto.user.RestUserUpdateDTO;
@@ -13,6 +12,7 @@ import com.jobHunter.demoAPI.repository.UserRepository;
 import com.jobHunter.demoAPI.service.CompanyService;
 import com.jobHunter.demoAPI.service.RoleService;
 import com.jobHunter.demoAPI.service.UserService;
+import com.jobHunter.demoAPI.util.pagination.PageUtil;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
@@ -51,12 +51,12 @@ public class UserServiceImpl implements UserService {
         this.roleService = roleService;
     }
 
-/*@Override
+    /*@Override
     public ResultPaginationDTO fetchAllUsers(Specification<User> spec, Pageable pageable) {
         Page<User> pageHavUsers = this.userRepository.findAll(spec, pageable);
 
         // cách truyền thống
-*//*        List<RestUserViewDTO> restUserViewDTOList = new ArrayList<>();
+        List<RestUserViewDTO> restUserViewDTOList = new ArrayList<>();
         List<User> users = pageHavUsers.getContent();
 
         for (User user : users) {
@@ -70,39 +70,7 @@ public class UserServiceImpl implements UserService {
             dto.setCreatedAt(user.getCreatedAt());
             dto.setUpdateAt(user.getUpdatedAt());
             restUserViewDTOList.add(dto);
-        }*//*
-
-     *//*        List<RestUserViewDTO> restUserListDTOS = pageHavUsers.getContent()
-                .stream()
-                .map(user -> {
-                    RestUserViewDTO dto = new RestUserViewDTO();
-                    dto.setId(user.getId());
-                    dto.setName(user.getName());
-                    dto.setEmail(user.getEmail());
-                    dto.setAge(user.getAge());
-                    dto.setGender(user.getGender());
-                    dto.setAddress(user.getAddress());
-                    dto.setCreatedAt(user.getCreatedAt());
-                    dto.setUpdateAt(user.getUpdatedAt());
-                    return dto;
-                })
-                .toList();*//*
-
-
-        // cách chuyên nghiệp hơn
-        List<RestUserViewDTO> restUserViewDTOList = pageHavUsers.getContent()
-                .stream()
-                .map(user -> new RestUserViewDTO(
-                        user.getId(),
-                        user.getName(),
-                        user.getEmail(),
-                        user.getAge(),
-                        user.getGender(),
-                        user.getAddress(),
-                        user.getCreatedAt(),
-                        user.getUpdatedAt()
-                ))
-                .toList();
+        }
 
         Meta meta = new Meta();
         meta.setCurrent(pageable.getPageNumber() + 1);
@@ -126,14 +94,7 @@ public class UserServiceImpl implements UserService {
                 .map(this::convertUserToRestUserViewDTO)
                 .toList();
 
-        Meta meta = new Meta();
-        meta.setCurrent(pageable.getPageNumber() + 1);
-        meta.setPageSize(pageable.getPageSize());
-        meta.setPages(pageHavUsers.getTotalPages());
-        meta.setTotal(pageHavUsers.getTotalElements());
-
-        ResultPaginationDTO resultPaginationDTO = new ResultPaginationDTO();
-        resultPaginationDTO.setMeta(meta);
+        ResultPaginationDTO resultPaginationDTO = PageUtil.handleFetchAllDataWithPagination(pageHavUsers, pageable);
         resultPaginationDTO.setResult(restUserViewDTOList);
 
         return resultPaginationDTO;
@@ -179,27 +140,32 @@ public class UserServiceImpl implements UserService {
         );
     }
 
+    private void checkExistAndSetCompanyAndRole(User userRequest, User currentUser) {
+        if (userRequest.getCompany() != null) {
+            if (!this.companyService.checkIdExists(userRequest.getCompany().getId())) {
+                throw new NoSuchElementException("Company with id " + userRequest.getCompany().getId() + " not found!");
+            }
+            Company companyGetById = this.companyService.getCompanyById(userRequest.getCompany().getId());
+            currentUser.setCompany(companyGetById);
+        }
+
+        if (userRequest.getRole() != null) {
+            if (!this.roleService.checkIdExists(userRequest.getRole().getId())) {
+                throw new NoSuchElementException("Role with id " + userRequest.getRole().getId() + " not found!");
+            }
+            Role roleGetById = this.roleService.getRoleById(userRequest.getRole().getId());
+            currentUser.setRole(roleGetById);
+        }
+    }
+
+    @Transactional
     @Override
     public User createUser(User user) {
         if (this.checkEmailExists(user.getEmail())) {
             throw new IllegalArgumentException("Email " + user.getEmail() + " already exists!");
         }
 
-        if (user.getCompany() != null) {
-            if (!this.companyService.checkIdExists(user.getCompany().getId())) {
-                throw new NoSuchElementException("Company with id " + user.getCompany().getId() + " not found!");
-            }
-            Company companyGetById = this.companyService.getCompanyById(user.getCompany().getId());
-            user.setCompany(companyGetById);
-        }
-
-        if (user.getRole() != null) {
-            if (!this.roleService.checkIdExists(user.getRole().getId())) {
-                throw new NoSuchElementException("Role with id " + user.getRole().getId() + " not found!");
-            }
-            Role roleGetById = this.roleService.getRoleById(user.getRole().getId());
-            user.setRole(roleGetById);
-        }
+        this.checkExistAndSetCompanyAndRole(user, user);
 
         user.setPassword(this.passwordEncoder.encode(user.getPassword()));
         return this.userRepository.save(user);
@@ -235,16 +201,6 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public RestUserUpdateDTO convertUserToRestUserUpdateDTO(User user) {
-        // cách 1
-/*        RestUserUpdateDTO.CompanyUpdated companyUpdated = null;
-        if (user.getCompany() != null) {
-            companyUpdated = new RestUserUpdateDTO.CompanyUpdated(
-                    user.getCompany().getId(),
-                    user.getCompany().getName()
-            );
-        }*/
-
-        // cách chuyên nghiệp
         RestUserUpdateDTO.CompanyUpdated companyUpdated = Optional.ofNullable(user.getCompany())
                 .map(company -> new RestUserUpdateDTO.CompanyUpdated(company.getId(), company.getName()))
                 .orElse(null);
@@ -269,41 +225,27 @@ public class UserServiceImpl implements UserService {
         currentUser.setGender(userUpdated.getGender());
         currentUser.setAddress(userUpdated.getAddress());
 
-        if (userUpdated.getCompany() != null) {
-            if (!this.companyService.checkIdExists(userUpdated.getCompany().getId())) {
-                throw new NoSuchElementException("Company not found!");
-            }
-            Company companyGetById = this.companyService.getCompanyById(userUpdated.getCompany().getId());
-            currentUser.setCompany(companyGetById);
-        }
-
-        if (userUpdated.getRole() != null) {
-            if  (!this.roleService.checkIdExists(userUpdated.getRole().getId())) {
-                throw new NoSuchElementException("Role not found!");
-            }
-            Role roleGetById = this.roleService.getRoleById(userUpdated.getRole().getId());
-            currentUser.setRole(roleGetById);
-        }
+        this.checkExistAndSetCompanyAndRole(userUpdated, currentUser);
 
         return this.userRepository.save(currentUser);
     }
 
-//    @Override
-//        public User updateUserById(Long id, User userUpdated) throws NoSuchElementException {
-//        if (!checkIdExists(id)) {
-//            throw new NoSuchElementException("User with id = " + id + " not found!");
-//        }
-//
-//        return getUserById(id)
-//                .map(currentUser -> {
-//                    currentUser.setName(userUpdated.getName());
-//                    currentUser.setAge(userUpdated.getAge());
-//                    currentUser.setGender(userUpdated.getGender());
-//                    currentUser.setAddress(userUpdated.getAddress());
-//                    return this.userRepository.save(currentUser);
-//                })
-//                .orElseThrow(() -> new NoSuchElementException("User not found"));
-//    }
+/*    @Override
+        public User updateUserById(Long id, User userUpdated) throws NoSuchElementException {
+        if (!checkIdExists(id)) {
+            throw new NoSuchElementException("User with id = " + id + " not found!");
+        }
+
+        return getUserById(id)
+                .map(currentUser -> {
+                    currentUser.setName(userUpdated.getName());
+                    currentUser.setAge(userUpdated.getAge());
+                    currentUser.setGender(userUpdated.getGender());
+                    currentUser.setAddress(userUpdated.getAddress());
+                    return this.userRepository.save(currentUser);
+                })
+                .orElseThrow(() -> new NoSuchElementException("User not found"));
+    }*/
 
     @Transactional
     @Override

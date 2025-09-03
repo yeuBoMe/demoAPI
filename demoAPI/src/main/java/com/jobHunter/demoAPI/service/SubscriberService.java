@@ -9,28 +9,20 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 
 public interface SubscriberService {
-
     Subscriber createSubscriber(Subscriber subscriber);
-
     Subscriber updateSubscriberById(Subscriber subscriber, Long id);
-
     Subscriber getSubscriberById(Long id);
-
     Subscriber getSubscriberByEmail(String email);
-
-    void deleteSubscriberById(Long id);
 
     ResultPaginationDTO fetchAllSubscribers(Specification<Subscriber> spec, Pageable pageable);
 
     RestSubscriberViewDTO convertSubscriberToRestSubscriberViewDTO(Subscriber subscriber);
-
     RestSubscriberCreateDTO  convertSubscriberToRestSubscriberCreateDTO(Subscriber subscriber);
-
     RestSubscriberUpdateDTO convertSubscriberToRestSubscriberUpdateDTO(Subscriber subscriber);
 
     boolean checkIdExists(Long id);
-
     boolean checkEmailExists(String email);
 
     void sendSubscribersEmailJobs();
+    void deleteSubscriberById(Long id);
 }

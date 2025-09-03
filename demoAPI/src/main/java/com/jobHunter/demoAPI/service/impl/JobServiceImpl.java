@@ -1,16 +1,16 @@
 package com.jobHunter.demoAPI.service.impl;
 
 import com.jobHunter.demoAPI.domain.dto.job.RestJobViewDTO;
-import com.jobHunter.demoAPI.domain.dto.pagination.Meta;
 import com.jobHunter.demoAPI.domain.dto.pagination.ResultPaginationDTO;
 import com.jobHunter.demoAPI.domain.entity.Company;
 import com.jobHunter.demoAPI.domain.entity.Job;
 import com.jobHunter.demoAPI.domain.entity.Skill;
 import com.jobHunter.demoAPI.repository.JobRepository;
 import com.jobHunter.demoAPI.repository.ResumeRepository;
+import com.jobHunter.demoAPI.repository.SkillRepository;
 import com.jobHunter.demoAPI.service.CompanyService;
 import com.jobHunter.demoAPI.service.JobService;
-import com.jobHunter.demoAPI.service.SkillService;
+import com.jobHunter.demoAPI.util.pagination.PageUtil;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
@@ -27,43 +27,44 @@ public class JobServiceImpl implements JobService {
 
     private final CompanyService companyService;
 
-    private final SkillService skillService;
+    private final SkillRepository skillRepository;
 
     private final ResumeRepository resumeRepository;
 
     public JobServiceImpl(
             JobRepository jobRepository,
             CompanyService companyService,
-            SkillService skillService,
+            SkillRepository skillRepository,
             ResumeRepository resumeRepository
     ) {
         this.jobRepository = jobRepository;
         this.companyService = companyService;
-        this.skillService = skillService;
+        this.skillRepository = skillRepository;
         this.resumeRepository = resumeRepository;
     }
 
-    private void checkNullAndSetSkillsAndCompany(Job job) {
-        if (job.getSkills() != null && !job.getSkills().isEmpty()) {
-            for (Skill skill : job.getSkills()) {
-                if (!this.skillService.checkIdExists(skill.getId())) {
+    private void checkNullAndSetSkillsAndCompany(Job jobRequest, Job currentJob) {
+        if (jobRequest.getSkills() != null && !jobRequest.getSkills().isEmpty()) {
+            for (Skill skill : jobRequest.getSkills()) {
+                if (!this.skillRepository.existsById(skill.getId())) {
                     throw new NoSuchElementException("Skill with id " + skill.getId() + " not found!");
                 }
             }
 
-            List<Long> skillIds = job.getSkills().stream()
+            List<Long> skillIds = jobRequest.getSkills().stream()
                     .map(Skill::getId)
                     .toList();
-            List<Skill> skillList = this.skillService.getSkillsByListId(skillIds);
-            job.setSkills(skillList);
+
+            List<Skill> skillList = this.skillRepository.findAllByIdIn(skillIds);
+            currentJob.setSkills(skillList);
         }
 
-        if (job.getCompany() != null) {
-            if (!this.companyService.checkIdExists(job.getCompany().getId())) {
-                throw new NoSuchElementException("Company with id " + job.getCompany().getId() + " not found!");
+        if (jobRequest.getCompany() != null) {
+            if (!this.companyService.checkIdExists(jobRequest.getCompany().getId())) {
+                throw new NoSuchElementException("Company with id " + jobRequest.getCompany().getId() + " not found!");
             }
-            Company companyGetById = this.companyService.getCompanyById(job.getCompany().getId());
-            job.setCompany(companyGetById);
+            Company companyGetById = this.companyService.getCompanyById(jobRequest.getCompany().getId());
+            currentJob.setCompany(companyGetById);
         }
     }
 
@@ -72,7 +73,7 @@ public class JobServiceImpl implements JobService {
         if (this.checkNameExists(job.getName())) {
             throw new IllegalArgumentException("Job with name " + job.getName() + " already exists!");
         }
-        this.checkNullAndSetSkillsAndCompany(job);
+        this.checkNullAndSetSkillsAndCompany(job, job);
         return this.jobRepository.save(job);
     }
 
@@ -86,27 +87,7 @@ public class JobServiceImpl implements JobService {
             throw new IllegalArgumentException("Job with name " + jobUpdated.getName() + " already exists!");
         }
 
-        if (jobUpdated.getCompany() != null) {
-            if (!this.companyService.checkIdExists(jobUpdated.getCompany().getId())) {
-                throw new NoSuchElementException("Company with id " + jobUpdated.getCompany().getId() + " not exists!");
-            }
-            Company companyGetById = this.companyService.getCompanyById(jobUpdated.getCompany().getId());
-            jobGetById.setCompany(companyGetById);
-        }
-
-        if (jobUpdated.getSkills() != null && !jobUpdated.getSkills().isEmpty()) {
-            for (Skill skill : jobUpdated.getSkills()) {
-                if (!this.skillService.checkIdExists(skill.getId())) {
-                    throw new NoSuchElementException("Skill with id " + skill.getId() + " not exists!");
-                }
-            }
-
-            List<Long> idList = jobUpdated.getSkills().stream()
-                    .map(Skill::getId)
-                    .toList();
-            List<Skill> skillList = this.skillService.getSkillsByListId(idList);
-            jobGetById.setSkills(skillList);
-        }
+        this.checkNullAndSetSkillsAndCompany(jobUpdated, jobGetById);
 
         jobGetById.setName(jobUpdated.getName());
         jobGetById.setLocation(jobUpdated.getLocation());
@@ -158,47 +139,10 @@ public class JobServiceImpl implements JobService {
 
         List<RestJobViewDTO> restJobViewDTOList = pageHavJobs.getContent()
                 .stream()
-                .map(job -> {
-                    RestJobViewDTO.CompanyView companyView = Optional.ofNullable(job.getCompany())
-                            .map(company -> new RestJobViewDTO.CompanyView(company.getName()))
-                            .orElse(null);
-
-                    List<String> skillList = Optional.ofNullable(job.getSkills())
-                            .map(skills -> skills.stream()
-                                    .map(Skill::getName)
-                                    .toList()
-                            )
-                            .orElse(null);
-
-                    return new RestJobViewDTO(
-                            job.getId(),
-                            job.getName(),
-                            job.getLocation(),
-                            job.getSalary(),
-                            job.getQuantity(),
-                            job.getLevel(),
-                            job.getDescription(),
-                            job.getStartDate(),
-                            job.getEndDate(),
-                            job.isActive(),
-                            job.getCreatedAt(),
-                            job.getUpdatedAt(),
-                            job.getCreatedBy(),
-                            job.getUpdatedBy(),
-                            companyView,
-                            skillList
-                    );
-                })
+                .map(this::convertJobToRestJobViewDTO)
                 .toList();
 
-        Meta meta = new Meta();
-        meta.setCurrent(pageable.getPageNumber() + 1);
-        meta.setPageSize(pageable.getPageSize());
-        meta.setPages(pageHavJobs.getTotalPages());
-        meta.setTotal(pageHavJobs.getTotalElements());
-
-        ResultPaginationDTO resultPaginationDTO = new ResultPaginationDTO();
-        resultPaginationDTO.setMeta(meta);
+        ResultPaginationDTO resultPaginationDTO = PageUtil.handleFetchAllDataWithPagination(pageHavJobs, pageable);
         resultPaginationDTO.setResult(restJobViewDTOList);
 
         return resultPaginationDTO;
@@ -228,10 +172,5 @@ public class JobServiceImpl implements JobService {
     @Override
     public boolean checkIdExists(Long id) {
         return this.jobRepository.existsById(id);
-    }
-
-    @Override
-    public List<Job> getJobsBySkills(List<Skill> skills) {
-        return this.jobRepository.findBySkillsIn(skills);
     }
 }

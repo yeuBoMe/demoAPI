@@ -9,27 +9,19 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 
 public interface ResumeService {
-
     Resume createResume(Resume resume);
-
     Resume updateResumeById(Long id, Resume resume);
-
-    void deleteResumeById(Long id);
+    Resume getResumeById(Long id);
 
     ResultPaginationDTO fetchAllResumes(Specification<Resume> spec, Pageable pageable);
-
     ResultPaginationDTO fetchResumesByCompany(Specification<Resume> spec, Pageable pageable);
-
     ResultPaginationDTO fetchResumesByUser(Pageable pageable);
 
     RestResumeViewDTO convertResumeToRestResumeViewDTO(Resume resume);
-
     RestResumeCreateDTO convertResumeToRestResumeCreateDTO(Resume resume);
-
     RestResumeUpdateDTO convertResumeToRestResumeUpdateDTO(Resume resume);
-
-    Resume getResumeById(Long id);
 
     boolean checkIdExists(Long id);
 
+    void deleteResumeById(Long id);
 }

@@ -8,11 +8,8 @@ import org.springframework.data.jpa.domain.Specification;
 import java.util.List;
 
 public interface SkillService {
-
     Skill createSkill(Skill skill);
-
     Skill updateSkillById(Long id, Skill skill);
-
     Skill getSkillById(Long id);
 
     ResultPaginationDTO fetchAllSkills(Specification<Skill> spec, Pageable pageable);
@@ -20,8 +17,5 @@ public interface SkillService {
     void deleteSkillById(Long id);
 
     boolean checkIdExists(Long id);
-
     boolean checkNameExists(String name);
-
-    List<Skill> getSkillsByListId(List<Long> ids);
 }

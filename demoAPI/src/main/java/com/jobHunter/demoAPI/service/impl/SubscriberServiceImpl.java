@@ -1,7 +1,6 @@
 package com.jobHunter.demoAPI.service.impl;
 
 import com.jobHunter.demoAPI.domain.dto.email.RestEmailJobDTO;
-import com.jobHunter.demoAPI.domain.dto.pagination.Meta;
 import com.jobHunter.demoAPI.domain.dto.pagination.ResultPaginationDTO;
 import com.jobHunter.demoAPI.domain.dto.subscriber.RestSubscriberCreateDTO;
 import com.jobHunter.demoAPI.domain.dto.subscriber.RestSubscriberUpdateDTO;
@@ -9,11 +8,12 @@ import com.jobHunter.demoAPI.domain.dto.subscriber.RestSubscriberViewDTO;
 import com.jobHunter.demoAPI.domain.entity.Job;
 import com.jobHunter.demoAPI.domain.entity.Skill;
 import com.jobHunter.demoAPI.domain.entity.Subscriber;
+import com.jobHunter.demoAPI.repository.JobRepository;
 import com.jobHunter.demoAPI.repository.SkillRepository;
 import com.jobHunter.demoAPI.repository.SubscriberRepository;
 import com.jobHunter.demoAPI.service.EmailService;
-import com.jobHunter.demoAPI.service.JobService;
 import com.jobHunter.demoAPI.service.SubscriberService;
+import com.jobHunter.demoAPI.util.pagination.PageUtil;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
@@ -33,35 +33,38 @@ public class SubscriberServiceImpl implements SubscriberService {
 
     private final SkillRepository skillRepository;
 
-    private final JobService jobService;
+    private final JobRepository jobRepository;
 
     private final EmailService emailService;
 
     public SubscriberServiceImpl(
             SubscriberRepository subscriberRepository,
             SkillRepository skillRepository,
-            JobService jobService,
+            JobRepository jobRepository,
             EmailService emailService
     ) {
         this.subscriberRepository = subscriberRepository;
         this.skillRepository = skillRepository;
-        this.jobService = jobService;
+        this.jobRepository = jobRepository;
         this.emailService = emailService;
     }
 
-    private void checkExistAndSetSkills(Subscriber subscriber) {
-        if (subscriber.getSkills() != null && !subscriber.getSkills().isEmpty()) {
-            for (Skill skill : subscriber.getSkills()) {
+    private void checkExistAndSetSkills(Subscriber subscriberRequest, Subscriber currentSubscriber) {
+        if (subscriberRequest.getSkills() != null
+                && !subscriberRequest.getSkills().isEmpty()
+        ) {
+            for (Skill skill : subscriberRequest.getSkills()) {
                 if (!this.skillRepository.existsById(skill.getId())) {
                     throw new NoSuchElementException("Skill with id " + skill.getId() + " does not exist");
                 }
             }
 
-            List<Long> skillIds = subscriber.getSkills().stream()
+            List<Long> skillIds = subscriberRequest.getSkills().stream()
                     .map(Skill::getId)
                     .toList();
+
             List<Skill> skills = this.skillRepository.findAllById(skillIds);
-            subscriber.setSkills(skills);
+            currentSubscriber.setSkills(skills);
         }
     }
 
@@ -71,7 +74,7 @@ public class SubscriberServiceImpl implements SubscriberService {
         if (this.checkEmailExists(subscriber.getEmail())) {
             throw new IllegalArgumentException(String.format("Email %s already exists", subscriber.getEmail()));
         }
-        this.checkExistAndSetSkills(subscriber);
+        this.checkExistAndSetSkills(subscriber, subscriber);
         return this.subscriberRepository.save(subscriber);
     }
 
@@ -79,21 +82,7 @@ public class SubscriberServiceImpl implements SubscriberService {
     @Override
     public Subscriber updateSubscriberById(Subscriber subscriberUpdated, Long id) {
         Subscriber subscriberGetById = this.getSubscriberById(id);
-
-        if (subscriberUpdated.getSkills() != null && !subscriberUpdated.getSkills().isEmpty()) {
-            for (Skill skill : subscriberUpdated.getSkills()) {
-                if (!this.skillRepository.existsById(skill.getId())) {
-                    throw new NoSuchElementException("Skill with id " + skill.getId() + " does not exist");
-                }
-            }
-
-            List<Long> skillIds = subscriberUpdated.getSkills().stream()
-                    .map(Skill::getId)
-                    .toList();
-            List<Skill> skills = this.skillRepository.findAllById(skillIds);
-            subscriberGetById.setSkills(skills);
-        }
-
+        this.checkExistAndSetSkills(subscriberUpdated, subscriberGetById);
         return this.subscriberRepository.save(subscriberGetById);
     }
 
@@ -115,21 +104,14 @@ public class SubscriberServiceImpl implements SubscriberService {
 
     @Override
     public ResultPaginationDTO fetchAllSubscribers(Specification<Subscriber> spec, Pageable pageable) {
-        Page<Subscriber> pageHavSubscriber = this.subscriberRepository.findAll(spec, pageable);
+        Page<Subscriber> pageHavSubscribers = this.subscriberRepository.findAll(spec, pageable);
 
-        List<RestSubscriberViewDTO> restSubscriberViewDTOList = pageHavSubscriber.getContent()
+        List<RestSubscriberViewDTO> restSubscriberViewDTOList = pageHavSubscribers.getContent()
                 .stream()
                 .map(this::convertSubscriberToRestSubscriberViewDTO)
                 .toList();
 
-        Meta meta = new Meta();
-        meta.setCurrent(pageable.getPageNumber() + 1);
-        meta.setPageSize(pageable.getPageSize());
-        meta.setPages(pageHavSubscriber.getTotalPages());
-        meta.setTotal(pageHavSubscriber.getTotalElements());
-
-        ResultPaginationDTO resultPaginationDTO = new ResultPaginationDTO();
-        resultPaginationDTO.setMeta(meta);
+        ResultPaginationDTO resultPaginationDTO = PageUtil.handleFetchAllDataWithPagination(pageHavSubscribers, pageable);
         resultPaginationDTO.setResult(restSubscriberViewDTOList);
 
         return resultPaginationDTO;
@@ -216,8 +198,10 @@ public class SubscriberServiceImpl implements SubscriberService {
         List<Subscriber> subscriberList = this.subscriberRepository.findAll();
         for (Subscriber subscriber : subscriberList) {
             List<Skill> skillList = subscriber.getSkills();
+
             if (skillList != null && !skillList.isEmpty()) {
-                List<Job> jobList = this.jobService.getJobsBySkills(skillList);
+                List<Job> jobList = this.jobRepository.findBySkillsIn(skillList);
+
                 if (jobList != null && !jobList.isEmpty()) {
                     List<RestEmailJobDTO> restEmailJobDTOList = jobList.stream()
                             .map(this::convertSubscriberToRestEmailJobDTO)

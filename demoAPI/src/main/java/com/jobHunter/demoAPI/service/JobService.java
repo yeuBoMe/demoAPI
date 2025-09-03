@@ -10,22 +10,16 @@ import org.springframework.data.jpa.domain.Specification;
 import java.util.List;
 
 public interface JobService {
-
     Job createJob(Job job);
-
     Job updateJobById(Long id, Job job);
+    Job getJobById(Long id);
 
     RestJobViewDTO convertJobToRestJobViewDTO(Job job);
 
     ResultPaginationDTO fetchAllJobs(Specification<Job> spec, Pageable pageable);
 
-    Job getJobById(Long id);
-
     void deleteJobById(Long id);
 
     boolean checkNameExists(String name);
-
     boolean checkIdExists(Long id);
-
-    List<Job> getJobsBySkills(List<Skill> skills);
 }

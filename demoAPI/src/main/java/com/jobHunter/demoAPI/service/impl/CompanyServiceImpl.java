@@ -1,12 +1,12 @@
 package com.jobHunter.demoAPI.service.impl;
 
 import com.jobHunter.demoAPI.domain.dto.company.RestCompanyViewDTO;
-import com.jobHunter.demoAPI.domain.dto.pagination.Meta;
 import com.jobHunter.demoAPI.domain.dto.pagination.ResultPaginationDTO;
 import com.jobHunter.demoAPI.domain.entity.Company;
 import com.jobHunter.demoAPI.repository.CompanyRepository;
 import com.jobHunter.demoAPI.repository.UserRepository;
 import com.jobHunter.demoAPI.service.CompanyService;
+import com.jobHunter.demoAPI.util.pagination.PageUtil;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
@@ -43,37 +43,10 @@ public class CompanyServiceImpl implements CompanyService {
 
         List<RestCompanyViewDTO> restCompanyViewDTOList = pageHavCompanies.getContent()
                 .stream()
-                .map(company -> {
-                    List<RestCompanyViewDTO.UserInfo> userInfoList = Optional.ofNullable(company.getUsers())
-                            .map(users -> users.stream()
-                                    .map(user -> new RestCompanyViewDTO.UserInfo(user.getId(), user.getName()))
-                                    .toList()
-                            )
-                            .orElse(null);
-
-                    return new RestCompanyViewDTO(
-                            company.getId(),
-                            company.getName(),
-                            company.getDescription(),
-                            company.getAddress(),
-                            company.getLogo(),
-                            company.getCreatedAt(),
-                            company.getUpdatedAt(),
-                            company.getCreatedBy(),
-                            company.getUpdatedBy(),
-                            userInfoList
-                    );
-                })
+                .map(this::convertCompanyToRestCompanyViewDTO)
                 .toList();
 
-        Meta meta = new Meta();
-        meta.setCurrent(pageable.getPageNumber() + 1);
-        meta.setPageSize(pageable.getPageSize());
-        meta.setPages(pageHavCompanies.getTotalPages());
-        meta.setTotal(pageHavCompanies.getTotalElements());
-
-        ResultPaginationDTO resultPaginationDTO = new ResultPaginationDTO();
-        resultPaginationDTO.setMeta(meta);
+        ResultPaginationDTO resultPaginationDTO = PageUtil.handleFetchAllDataWithPagination(pageHavCompanies, pageable);
         resultPaginationDTO.setResult(restCompanyViewDTOList);
 
         return resultPaginationDTO;
@@ -137,31 +110,12 @@ public class CompanyServiceImpl implements CompanyService {
         return this.companyRepository.existsById(id);
     }
 
-/*    @Transactional
-    @Override
-    public void deleteCompanyById(Long id) {
-        if (!this.checkIdExists(id)) {
-            throw new NoSuchElementException("Company with id " + id + " not found!");
-        }
-
-        Company companyGetById = this.getCompanyById(id);
-        List<User> userListFindByCompany = this.userRepository.findByCompany(companyGetById);
-
-        if (!userListFindByCompany.isEmpty()) {
-            this.userRepository.deleteAll(userListFindByCompany);
-        }
-
-        this.companyRepository.deleteById(id);
-    }*/
-
-    // Cách xóa chuyên nghiệp hơn
     @Transactional
     @Override
     public void deleteCompanyById(Long id) {
         if (!this.checkIdExists(id)) {
             throw new NoSuchElementException("Company with id " + id + " not found!");
         }
-
         this.userRepository.deleteByCompanyId(id);
         this.companyRepository.deleteById(id);
     }

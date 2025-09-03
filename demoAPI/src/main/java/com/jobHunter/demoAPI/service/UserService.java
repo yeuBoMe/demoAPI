@@ -9,30 +9,22 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 
 public interface UserService {
-    ResultPaginationDTO fetchAllUsers(Specification<User> spec, Pageable pageable);
-
-    User getUserById(Long id);
-
     User createUser(User user);
-
-    RestUserCreateDTO convertUserToRestUserCreateDTO(User user);
-
-    RestUserUpdateDTO convertUserToRestUserUpdateDTO(User user);
-
-    RestUserViewDTO convertUserToRestUserViewDTO(User user);
-
-    void handleSaveUserRefreshToken(String refreshToken, String email);
-
     User updateUserById(Long id, User user);
-
+    User getUserById(Long id);
     User getUserByEmail(String email);
-
     User getUserByRefreshTokenAndEmail(String refreshToken, String email);
 
-    boolean checkEmailExists(String email);
+    ResultPaginationDTO fetchAllUsers(Specification<User> spec, Pageable pageable);
 
+    RestUserCreateDTO convertUserToRestUserCreateDTO(User user);
+    RestUserUpdateDTO convertUserToRestUserUpdateDTO(User user);
+    RestUserViewDTO convertUserToRestUserViewDTO(User user);
+
+    boolean checkEmailExists(String email);
     boolean checkIdExists(Long id);
 
+    void handleSaveUserRefreshToken(String refreshToken, String email);
     void deleteUserById(Long id);
 }
 

@@ -1,6 +1,5 @@
 package com.jobHunter.demoAPI.service.impl;
 
-import com.jobHunter.demoAPI.domain.dto.pagination.Meta;
 import com.jobHunter.demoAPI.domain.dto.pagination.ResultPaginationDTO;
 import com.jobHunter.demoAPI.domain.dto.resume.RestResumeCreateDTO;
 import com.jobHunter.demoAPI.domain.dto.resume.RestResumeUpdateDTO;
@@ -13,6 +12,7 @@ import com.jobHunter.demoAPI.repository.ResumeRepository;
 import com.jobHunter.demoAPI.service.JobService;
 import com.jobHunter.demoAPI.service.ResumeService;
 import com.jobHunter.demoAPI.service.UserService;
+import com.jobHunter.demoAPI.util.pagination.PageUtil;
 import com.jobHunter.demoAPI.util.security.SecurityUtil;
 import com.turkraft.springfilter.converter.FilterSpecification;
 import com.turkraft.springfilter.converter.FilterSpecificationConverter;
@@ -103,14 +103,7 @@ public class ResumeServiceImpl implements ResumeService {
                 .map(this::convertResumeToRestResumeViewDTO)
                 .toList();
 
-        Meta meta = new Meta();
-        meta.setCurrent(pageable.getPageNumber() + 1);
-        meta.setPageSize(pageable.getPageSize());
-        meta.setPages(pageHavResumes.getTotalPages());
-        meta.setTotal(pageHavResumes.getTotalElements());
-
-        ResultPaginationDTO resultPaginationDTO = new ResultPaginationDTO();
-        resultPaginationDTO.setMeta(meta);
+        ResultPaginationDTO resultPaginationDTO = PageUtil.handleFetchAllDataWithPagination(pageHavResumes, pageable);
         resultPaginationDTO.setResult(restResumeViewDTOList);
 
         return resultPaginationDTO;
@@ -125,14 +118,7 @@ public class ResumeServiceImpl implements ResumeService {
                 .map(this::convertResumeToRestResumeViewDTO)
                 .toList();
 
-        Meta meta = new Meta();
-        meta.setCurrent(pageable.getPageNumber() + 1);
-        meta.setPageSize(pageable.getPageSize());
-        meta.setPages(pageHavResumes.getTotalPages());
-        meta.setTotal(pageHavResumes.getTotalElements());
-
-        ResultPaginationDTO resultPaginationDTO = new ResultPaginationDTO();
-        resultPaginationDTO.setMeta(meta);
+        ResultPaginationDTO resultPaginationDTO = PageUtil.handleFetchAllDataWithPagination(pageHavResumes, pageable);
         resultPaginationDTO.setResult(restResumeViewDTOList);
 
         return resultPaginationDTO;
@@ -147,14 +133,7 @@ public class ResumeServiceImpl implements ResumeService {
         FilterSpecification<Resume> spec = this.filterSpecificationConverter.convert(node);
         Page<Resume> pageHavResumes = this.resumeRepository.findAll(spec, pageable);
 
-        Meta meta = new Meta();
-        meta.setCurrent(pageable.getPageNumber() + 1);
-        meta.setPageSize(pageable.getPageSize());
-        meta.setPages(pageHavResumes.getTotalPages());
-        meta.setTotal(pageHavResumes.getTotalElements());
-
-        ResultPaginationDTO resultPaginationDTO = new ResultPaginationDTO();
-        resultPaginationDTO.setMeta(meta);
+        ResultPaginationDTO resultPaginationDTO = PageUtil.handleFetchAllDataWithPagination(pageHavResumes, pageable);
         resultPaginationDTO.setResult(pageHavResumes.getContent());
 
         return resultPaginationDTO;

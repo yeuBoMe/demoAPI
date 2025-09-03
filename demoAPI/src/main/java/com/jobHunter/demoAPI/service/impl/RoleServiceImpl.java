@@ -39,15 +39,17 @@ public class RoleServiceImpl implements RoleService {
         this.userRepository = userRepository;
     }
 
-    private void checkNullAndSetPermissions(Role role) {
-        if (role.getPermissions() != null && !role.getPermissions().isEmpty()) {
-            for (Permission permission : role.getPermissions()) {
+    private void checkNullAndSetPermissions(Role roleRequest, Role currentRole) {
+        if (roleRequest.getPermissions() != null
+                && !roleRequest.getPermissions().isEmpty()
+        ) {
+            for (Permission permission : roleRequest.getPermissions()) {
                 if (!this.permissionService.checkIdExists(permission.getId())) {
                     throw new NoSuchElementException("Permission with id " + permission.getId() + " not exists");
                 }
             }
 
-            List<Long> idList = role.getPermissions().stream()
+            List<Long> idList = roleRequest.getPermissions().stream()
                     .map(Permission::getId)
                     .toList();
             List<Permission> permissionList = this.permissionService.getPermissionsByListId(idList);

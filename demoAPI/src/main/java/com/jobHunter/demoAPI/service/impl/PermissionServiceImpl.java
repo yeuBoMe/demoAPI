@@ -135,11 +135,6 @@ public class PermissionServiceImpl implements PermissionService {
     }
 
     @Override
-    public List<Permission> getPermissionsByListId(List<Long> ids) {
-        return this.permissionRepository.findAllByIdIn(ids);
-    }
-
-    @Override
     public RestPermissionCreateDTO convertPermissionToRestPermissionCreateDTO(Permission permission) {
         return new RestPermissionCreateDTO(
                 permission.getId(),
