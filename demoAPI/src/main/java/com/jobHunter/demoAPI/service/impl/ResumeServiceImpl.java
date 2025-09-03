@@ -55,25 +55,28 @@ public class ResumeServiceImpl implements ResumeService {
         this.filterSpecificationConverter = filterSpecificationConverter;
     }
 
+    private void checkExistAndSetUserAndJobForResume(Resume resumeRequest, Resume currentResume) {
+        if (resumeRequest.getUser() != null) {
+            if (!this.userService.checkIdExists(resumeRequest.getUser().getId())) {
+                throw new NoSuchElementException("User with id " + resumeRequest.getUser().getId() + " not found!");
+            }
+            User userGetById = this.userService.getUserById(resumeRequest.getUser().getId());
+            currentResume.setUser(userGetById);
+        }
+
+        if (resumeRequest.getJob() != null) {
+            if (!this.jobService.checkIdExists(resumeRequest.getJob().getId())) {
+                throw new NoSuchElementException("Job with id " + resumeRequest.getJob().getId() + " not found!");
+            }
+            Job jobGetById = this.jobService.getJobById(resumeRequest.getJob().getId());
+            currentResume.setJob(jobGetById);
+        }
+    }
+
     @Transactional
     @Override
     public Resume createResume(Resume resume) {
-        if (resume.getUser() != null) {
-            if (!this.userService.checkIdExists(resume.getUser().getId())) {
-                throw new NoSuchElementException("User with id " + resume.getUser().getId() + " not found!");
-            }
-            User userGetById = this.userService.getUserById(resume.getUser().getId());
-            resume.setUser(userGetById);
-        }
-
-        if (resume.getJob() != null) {
-            if (!this.jobService.checkIdExists(resume.getJob().getId())) {
-                throw new NoSuchElementException("Job with id " + resume.getJob().getId() + " not found!");
-            }
-            Job jobGetById = this.jobService.getJobById(resume.getJob().getId());
-            resume.setJob(jobGetById);
-        }
-
+        this.checkExistAndSetUserAndJobForResume(resume, resume);
         return this.resumeRepository.save(resume);
     }
 
