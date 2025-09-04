@@ -63,7 +63,7 @@ public class SubscriberServiceImpl implements SubscriberService {
                     .map(Skill::getId)
                     .toList();
 
-            List<Skill> skills = this.skillRepository.findAllById(skillIds);
+            List<Skill> skills = this.skillRepository.findAllByIdIn(skillIds);
             currentSubscriber.setSkills(skills);
         }
     }

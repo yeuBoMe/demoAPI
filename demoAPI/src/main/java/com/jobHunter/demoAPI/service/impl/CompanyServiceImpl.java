@@ -24,11 +24,15 @@ public class CompanyServiceImpl implements CompanyService {
 
     private final UserRepository userRepository;
 
-    public CompanyServiceImpl(CompanyRepository companyRepository, UserRepository userRepository) {
+    public CompanyServiceImpl(
+            CompanyRepository companyRepository,
+            UserRepository userRepository
+    ) {
         this.companyRepository = companyRepository;
         this.userRepository = userRepository;
     }
 
+    @Transactional
     @Override
     public Company createCompany(Company company) {
         if (checkNameExists(company.getName())) {
@@ -59,6 +63,7 @@ public class CompanyServiceImpl implements CompanyService {
                 .orElseThrow(() -> new NoSuchElementException("Company with id " + id + " not found!"));
     }
 
+    @Transactional
     @Override
     public Company updateCompanyById(Long id, Company companyUpdated) {
         Company currentCompany = this.getCompanyById(id);

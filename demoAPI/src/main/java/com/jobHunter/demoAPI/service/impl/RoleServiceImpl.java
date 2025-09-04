@@ -15,6 +15,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.NoSuchElementException;
@@ -58,6 +59,7 @@ public class RoleServiceImpl implements RoleService {
         }
     }
 
+    @Transactional
     @Override
     public Role createRole(Role role) {
         if (this.checkNameExists(role.getName())) {
@@ -67,6 +69,7 @@ public class RoleServiceImpl implements RoleService {
         return this.roleRepository.save(role);
     }
 
+    @Transactional
     @Override
     public Role updateRoleById(Long id, Role roleUpdated) {
         Role roleGetById = this.getRoleById(id);
@@ -86,6 +89,7 @@ public class RoleServiceImpl implements RoleService {
         return this.roleRepository.save(roleGetById);
     }
 
+    @Transactional
     @Override
     public void deleteRoleById(Long id) {
         if (!this.roleRepository.existsById(id)) {

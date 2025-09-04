@@ -216,6 +216,7 @@ public class UserServiceImpl implements UserService {
         );
     }
 
+    @Transactional
     @Override
     public User updateUserById(Long id, User userUpdated) {
         User currentUser = this.getUserById(id);

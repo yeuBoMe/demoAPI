@@ -12,6 +12,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.NoSuchElementException;
@@ -25,6 +26,7 @@ public class PermissionServiceImpl implements PermissionService {
         this.permissionRepository = permissionRepository;
     }
 
+    @Transactional
     @Override
     public Permission createPermission(Permission permission) {
         if (this.checkNameExists(permission.getName())
@@ -57,6 +59,7 @@ public class PermissionServiceImpl implements PermissionService {
                 .orElseThrow(() -> new NoSuchElementException("Permission with id " + id + " not found!"));
     }
 
+    @Transactional
     @Override
     public Permission updatePermissionById(Long id, Permission permissionUpdated) {
         Permission permissionGetById = this.getPermissionById(id);
@@ -86,6 +89,7 @@ public class PermissionServiceImpl implements PermissionService {
         return this.permissionRepository.save(permissionGetById);
     }
 
+    @Transactional
     @Override
     public void deletePermissionById(Long id) {
         if (!this.checkIdExists(id)) {

@@ -15,6 +15,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.NoSuchElementException;
@@ -68,6 +69,7 @@ public class JobServiceImpl implements JobService {
         }
     }
 
+    @Transactional
     @Override
     public Job createJob(Job job) {
         if (this.checkNameExists(job.getName())) {
@@ -77,6 +79,7 @@ public class JobServiceImpl implements JobService {
         return this.jobRepository.save(job);
     }
 
+    @Transactional
     @Override
     public Job updateJobById(Long id, Job jobUpdated) {
         Job jobGetById = this.getJobById(id);
@@ -155,6 +158,7 @@ public class JobServiceImpl implements JobService {
                 .orElseThrow(() -> new NoSuchElementException("Job with id " + id + " doesn't exist!"));
     }
 
+    @Transactional
     @Override
     public void deleteJobById(Long id) {
         if (!this.checkIdExists(id)) {
