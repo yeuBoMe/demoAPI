@@ -67,7 +67,7 @@ public class PermissionServiceImpl implements PermissionService {
         if (this.checkNameExists(permissionUpdated.getName())
                 && !permissionGetById.getName().equals(permissionUpdated.getName())
         ) {
-            throw new IllegalArgumentException("Permission with name " + permissionUpdated.getName() + " already exists!");
+            throw new IllegalArgumentException("Permission with name '" + permissionUpdated.getName() + "' already exists!");
         }
 
         if (this.checkApiPathAndModuleAndMethodExists(permissionUpdated.getApiPath(), permissionUpdated.getModule(), permissionUpdated.getMethod())

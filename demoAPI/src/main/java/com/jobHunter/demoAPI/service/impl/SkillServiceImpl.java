@@ -26,7 +26,7 @@ public class SkillServiceImpl implements SkillService {
     @Override
     public Skill createSkill(Skill skill) {
         if (this.checkNameExists(skill.getName())) {
-            throw new IllegalArgumentException("Skill with name " + skill.getName() + " already exists!");
+            throw new IllegalArgumentException("Skill with name '" + skill.getName() + "' already exists!");
         }
         return this.skillRepository.save(skill);
     }
@@ -39,7 +39,7 @@ public class SkillServiceImpl implements SkillService {
         if (this.checkNameExists(skillUpdated.getName())
                 && !skillGetById.getName().equals(skillUpdated.getName())
         ) {
-            throw new IllegalArgumentException("Skill with name " + skillUpdated.getName() + " already exists!");
+            throw new IllegalArgumentException("Skill with name '" + skillUpdated.getName() + "' already exists!");
         }
 
         skillGetById.setName(skillUpdated.getName());

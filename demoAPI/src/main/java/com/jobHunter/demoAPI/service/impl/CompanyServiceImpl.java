@@ -36,7 +36,7 @@ public class CompanyServiceImpl implements CompanyService {
     @Override
     public Company createCompany(Company company) {
         if (checkNameExists(company.getName())) {
-            throw new IllegalArgumentException("Company with name " + company.getName() + " already exists!");
+            throw new IllegalArgumentException("Company with name '" + company.getName() + "' already exists!");
         }
         return this.companyRepository.save(company);
     }
@@ -71,7 +71,7 @@ public class CompanyServiceImpl implements CompanyService {
         if (this.checkNameExists(companyUpdated.getName()) &&
                 !currentCompany.getName().equals(companyUpdated.getName())
         ) {
-            throw new IllegalArgumentException("Company with name " + companyUpdated.getName() + " already exists!");
+            throw new IllegalArgumentException("Company with name '" + companyUpdated.getName() + "' already exists!");
         }
 
         currentCompany.setName(companyUpdated.getName());

@@ -73,7 +73,7 @@ public class JobServiceImpl implements JobService {
     @Override
     public Job createJob(Job job) {
         if (this.checkNameExists(job.getName())) {
-            throw new IllegalArgumentException("Job with name " + job.getName() + " already exists!");
+            throw new IllegalArgumentException("Job with name '" + job.getName() + "' already exists!");
         }
         this.checkNullAndSetSkillsAndCompany(job, job);
         return this.jobRepository.save(job);
@@ -87,7 +87,7 @@ public class JobServiceImpl implements JobService {
         if (this.checkNameExists(jobUpdated.getName())
                 && !jobGetById.getName().equals(jobUpdated.getName())
         ) {
-            throw new IllegalArgumentException("Job with name " + jobUpdated.getName() + " already exists!");
+            throw new IllegalArgumentException("Job with name '" + jobUpdated.getName() + "' already exists!");
         }
 
         this.checkNullAndSetSkillsAndCompany(jobUpdated, jobGetById);

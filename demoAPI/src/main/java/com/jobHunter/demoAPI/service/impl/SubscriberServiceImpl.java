@@ -72,7 +72,7 @@ public class SubscriberServiceImpl implements SubscriberService {
     @Override
     public Subscriber createSubscriber(Subscriber subscriber) {
         if (this.checkEmailExists(subscriber.getEmail())) {
-            throw new IllegalArgumentException(String.format("Email %s already exists", subscriber.getEmail()));
+            throw new IllegalArgumentException(String.format("Email '%s' already exists", subscriber.getEmail()));
         }
         this.checkExistAndSetSkills(subscriber, subscriber);
         return this.subscriberRepository.save(subscriber);

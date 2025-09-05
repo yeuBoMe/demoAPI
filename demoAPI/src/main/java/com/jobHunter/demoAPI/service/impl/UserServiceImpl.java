@@ -162,7 +162,7 @@ public class UserServiceImpl implements UserService {
     @Override
     public User createUser(User user) {
         if (this.checkEmailExists(user.getEmail())) {
-            throw new IllegalArgumentException("Email " + user.getEmail() + " already exists!");
+            throw new IllegalArgumentException("Email '" + user.getEmail() + "' already exists!");
         }
 
         this.checkExistAndSetCompanyAndRole(user, user);
