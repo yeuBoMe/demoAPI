@@ -22,6 +22,7 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Optional;
@@ -145,7 +146,7 @@ public class SubscriberServiceImpl implements SubscriberService {
                         .map(Skill::getName)
                         .toList()
                 )
-                .orElse(null);
+                .orElse(new ArrayList<>());
 
         return new RestSubscriberCreateDTO(
                 subscriber.getId(),
@@ -229,7 +230,7 @@ public class SubscriberServiceImpl implements SubscriberService {
                         .map(skill -> new RestEmailJobDTO.SkillEmailJob(skill.getName()))
                         .toList()
                 )
-                .orElse(null);
+                .orElse(new ArrayList<>());
 
         return new RestEmailJobDTO(
                 job.getName(),

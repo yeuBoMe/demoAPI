@@ -17,6 +17,7 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Optional;
@@ -138,7 +139,7 @@ public class RoleServiceImpl implements RoleService {
                         .map(Permission::getName)
                         .toList()
                 )
-                .orElse(null);
+                .orElse(new ArrayList<>());
 
         return new RestRoleCreateDTO(
                 role.getId(),
@@ -158,7 +159,7 @@ public class RoleServiceImpl implements RoleService {
                         .map(Permission::getName)
                         .toList()
                 )
-                .orElse(null);
+                .orElse(new ArrayList<>());
 
         return new RestRoleUpdateDTO(
                 role.getId(),
@@ -178,7 +179,7 @@ public class RoleServiceImpl implements RoleService {
                         .map(Permission::getName)
                         .toList()
                 )
-                .orElse(null);
+                .orElse(new ArrayList<>());
 
         return new RestRoleViewDTO(
                 role.getId(),

@@ -21,8 +21,10 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.NoSuchElementException;
+import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/v1/auth")
@@ -164,11 +166,13 @@ public class AuthController {
             return null;
         }
 
-        if (user.getRole() != null && !user.getRole().getPermissions().isEmpty()) {
-            List<String> permissionList = user.getRole().getPermissions()
-                    .stream()
-                    .map(Permission::getName)
-                    .toList();
+        if (user.getRole() != null) {
+            List<String> permissionList = Optional.ofNullable(user.getRole().getPermissions())
+                    .map(permissions -> permissions.stream()
+                            .map(Permission::getName)
+                            .toList()
+                    )
+                    .orElse(new ArrayList<>());
 
             RestLoginDTO.UserLogin.RoleUserLogin roleUserLogin = new RestLoginDTO.UserLogin.RoleUserLogin(
                     user.getRole().getName(),
