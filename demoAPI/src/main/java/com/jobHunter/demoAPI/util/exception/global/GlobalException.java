@@ -162,12 +162,12 @@ public class GlobalException {
     @ExceptionHandler(IllegalStateException.class)
     public ResponseEntity<RestResponse<Object>> handleIllegalStateException(IllegalStateException ex) {
         RestResponse<Object> restResponse = new RestResponse<>();
-        restResponse.setStatusCode(HttpStatus.INTERNAL_SERVER_ERROR.value());
+        restResponse.setStatusCode(HttpStatus.BAD_REQUEST.value());
         restResponse.setError("Exception occurs...");
         restResponse.setMessage(ex.getMessage());
 
         return ResponseEntity
-                .status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .status(HttpStatus.BAD_REQUEST)
                 .body(restResponse);
     }
 
